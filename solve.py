@@ -5,10 +5,10 @@ import pycosat
 import subprocess
 
 class Solver(Enum):
-  PICOSAT = 1
-  ORTOOLS = 2
-  CLASP = 3
-  PENNSAT = 4
+  PICOSAT = 'PICOSAT'
+  ORTOOLS = 'ORTOOLS'
+  CLASP = 'CLASP'
+  PENNSAT = 'PENNSAT'
 
 def solve(formula, solver: Solver):
   if solver == Solver.PICOSAT:

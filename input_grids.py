@@ -3,13 +3,15 @@ import requests
 import io
 from enum import Enum
 from PIL import Image
+from os import path
+from typing import Optional, Callable
 
 class ExampleInput(Enum):
-  STICK = 1
-  DOT = 2
-  L = 3
-  ZELDA = 4
-  MARIO = 5
+  STICK = 'STICK'
+  DOT = 'DOT'
+  L = 'L'
+  ZELDA = 'ZELDA'
+  MARIO = 'MARIO'
 
 N = 7
 C = 2
@@ -66,10 +68,10 @@ def get_input_image(image_url):
         tile_grid[y // tile_size, x // tile_size] = tile_id
 
   else:
-    print("Failed to fetch the image. Status code:", response.status_code)
+    raise ValueError(f'Failed to fetch the image. Status code: {response.status_code}')
 
   print(f'Num unique tiles: {len(id_to_tile_map.keys())}')
-  def image_from_grid(solution):
+  def image_from_grid(solution: np.ndarray):
     new_width, new_height = solution.shape[1] * tile_size, solution.shape[0] * tile_size
     reconstructed_image = Image.new('RGB', (new_width, new_height), 'white')
 
@@ -92,3 +94,23 @@ def get_mario_input():
   PADDING_TILE = len(np.unique(grid))
   grid = np.pad(grid, 1, mode='constant', constant_values=PADDING_TILE)
   return grid, lambda soln: image_from_grid(soln[1:-1, 1:-1])
+
+def get_input(input: str) -> tuple[np.ndarray, Optional[Callable[[np.ndarray], Image.Image]]]:
+  if input == ExampleInput.STICK:
+    return INPUT_2D_STICK, None
+  elif input == ExampleInput.DOT:
+    return INPUT_2D_DOT, None
+  elif input == ExampleInput.L:
+    return INPUT_2D_L, None
+  elif input == ExampleInput.ZELDA:
+    return get_zelda_input()
+  elif input == ExampleInput.MARIO:
+    return get_mario_input()
+  # if input is a local file
+  elif path.exists(input):
+    raise ValueError("File input not implemented yet")
+  # if input is a URL
+  elif input.startswith('http'):
+    return get_input_image(input)
+  
+  raise ValueError(f"Invalid input {input}")

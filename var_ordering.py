@@ -12,16 +12,16 @@ NeighborhoodVarOrdering = Callable[[Tuple[int, int], int, Tuple[int, int, int, i
 
 
 class VariableOrderingType(Enum):
-  TRIVIAL = 1
-  UNIFORM = 2
-  TILE_FREQUENCY = 3
-  CONTEXT_SENSITIVE = 4
+  TRIVIAL = 'TRIVIAL'
+  UNIFORM = 'UNIFORM'
+  TILE_FREQUENCY = 'TILE_FREQUENCY'
+  CONTEXT_SENSITIVE = 'CONTEXT_SENSITIVE'
 
 class CellOrderingType(Enum):
-  ROW_MAJOR = 1
-  COL_MAJOR = 2
-  RANDOM = 3
-  ROW_MAJOR_BOTTOM_UP = 4
+  ROW_MAJOR = 'ROW_MAJOR'
+  COL_MAJOR = 'COL_MAJOR'
+  RANDOM = 'RANDOM'
+  ROW_MAJOR_BOTTOM_UP = 'ROW_MAJOR_BOTTOM_UP'
 
 def compute_tile_var_ordering(
   N: int,

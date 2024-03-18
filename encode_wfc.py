@@ -4,8 +4,8 @@ from enum import Enum
 from var_ordering import compute_neighborhood_frequencies_sparse, compute_edge_label_frequencies_per_axis_2d_fixed
 
 class WFCEncodingType(Enum):
-  TILE = 1
-  NEIGHBORHOOD = 2
+  TILE = "TILE"
+  NEIGHBORHOOD = "NEIGHBORHOOD"
 
 def encode_wfc_formula(N, C, input, var_ordering):
   """
