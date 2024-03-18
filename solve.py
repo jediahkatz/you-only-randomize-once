@@ -3,6 +3,7 @@ from math import ceil
 from collections import defaultdict
 import pycosat
 import subprocess
+from ortools.sat.python import cp_model
 
 class Solver(Enum):
   PICOSAT = 'PICOSAT'
@@ -24,7 +25,11 @@ def solve(formula, solver: Solver):
       return None
     return negate_literals_in_solution(soln)
   elif solver == Solver.ORTOOLS:
-    raise ValueError("ORTOOLS solver is not implemented yet")
+    modified_formula = transform_formula_for_solver(formula, negate_literals=True, hack_jw_heuristic=False)
+    soln = solve_formula_with_ortools(modified_formula)
+    if soln is None:
+      return None
+    return negate_literals_in_solution(soln)
   elif solver == Solver.PENNSAT:
     raise ValueError("The PennSAT solver is not included with this repo, sorry!")
   else:
@@ -109,3 +114,48 @@ def parse_clasp_output(output_lines):
     line_strs = solution_line[2:].split(' ')
     solution_literals.extend(int(literal) for literal in line_strs if literal != '0')
   return solution_literals
+
+def solve_formula_with_ortools(formula, num_threads=4, preprocess=False, default_sign='neg'):
+  """
+  Since OR-Tools is a constraint programming solver, we need to express the CNF
+  formula in a high-level format to solve it.
+  """
+  num_vars = max(abs(v) for clause in formula for v in clause)
+  model = cp_model.CpModel()
+  vars = {}
+  for i in range(1, num_vars+1):
+    vars[i] = model.NewBoolVar(f'v_{i}')
+  for clause in formula:
+    or_literals = []
+    for literal in clause:
+      i = abs(literal)
+      or_literals.append(vars[i] if literal > 0 else vars[i].Not())
+    model.AddBoolOr(or_literals)
+
+  if default_sign != 'rnd':
+    value_order = cp_model.SELECT_MIN_VALUE if default_sign == 'neg' else cp_model.SELECT_MAX_VALUE
+    model.AddDecisionStrategy(vars.values(), cp_model.CHOOSE_FIRST, value_order)
+  else:
+    print('Warning: default_sign={rnd} may not work properly. It also might cause the variable order to not be respected.')
+
+  solver = cp_model.CpSolver()
+  # solver.parameters.num_workers = num_threads
+  solver.parameters.cp_model_presolve = preprocess
+  # signs = {
+  #     'neg': solver.parameters.POLARITY_FALSE,
+  #     'pos': solver.parameters.POLARITY_TRUE,
+  #     'rnd': solver.parameters.POLARITY_RANDOM,
+  # }
+  # solver.parameters.initial_polarity = signs[default_sign]
+  # solver.parameters.random_seed = seed if seed else int(time())
+  # solver.log_search_progress = True
+  solver.parameters.search_branching = solver.parameters.FIXED_SEARCH
+
+
+  status = solver.Solve(model)
+  if status == cp_model.OPTIMAL:
+    print(solver.ResponseStats())
+    return [i if solver.Value(vars[i]) else -i for i in range(1, num_vars+1)]
+  else:
+    print(f'Something went wrong with solving')
+    print(solver.ResponseStats())
