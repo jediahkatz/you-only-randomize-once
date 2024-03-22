@@ -31,6 +31,7 @@ if __name__ == "__main__":
     solver = args.solver
     N = args.output_size
     seed = args.random_seed
+    output_file = args.output_file
 
     # Whether to add a constraint that there must be a path from the top-left to the bottom-right
     # that only moves right and down, using only tiles in `path_tiles_for_reachability_constraint`.
@@ -77,7 +78,7 @@ if __name__ == "__main__":
             N, formula, tile_var_ordering, path_tiles_for_reachability_constraint
         )
 
-    print(f"Formula encoded in {time() - t}s. Solving...")
+    print(f"Formula encoded in {time() - t}s. Solving with {solver}...")
     t = time()
 
     solution = solve(formula, solver)
@@ -85,7 +86,7 @@ if __name__ == "__main__":
         solution_grid = decode_solution_to_grid(N, C, solution, tile_var_ordering)
         print(f"Solution found in {time() - t}s! Opening image in new window...")
         visualize_grid_solution(
-            C, solution_grid, grid_to_img_func=reconstruct_img_from_grid
+            C, solution_grid, grid_to_img_func=reconstruct_img_from_grid, output_file=output_file
         )
     else:
         print(

@@ -20,8 +20,9 @@ class Arguments:
     cell_ordering_type: CellOrderingType
     wfc_encoding_type: WFCEncodingType
     solver: Solver
-    random_seed: int
+    random_seed: Optional[int]
     output_size: int = 20
+    output_file: Optional[str] = None
 
 
 def parse_args():
@@ -33,7 +34,7 @@ def parse_args():
         "--input",
         type=str,
         help="Which example input to use. You can also use a custom image URL.",
-        default='zelda'
+        default=None
     )
     parser.add_argument(
         "--var_ordering",
@@ -45,7 +46,7 @@ def parse_args():
             VariableOrderingType.UNIFORM,
         ],
         help="Which preset algorithm to use for variable ordering. The CONTEXT_SENSITIVE algorithm is only available for the NEIGHBORHOOD encoding type.",
-        default=VariableOrderingType.CONTEXT_SENSITIVE,
+        default=None,
     )
     parser.add_argument(
         "--cell_ordering",
@@ -57,7 +58,7 @@ def parse_args():
             CellOrderingType.ROW_MAJOR_BOTTOM_UP,
         ],
         help="The order the solver will attempt to assing the cells in. Different biases can be observed in the output with each ordering.",
-        default=CellOrderingType.COL_MAJOR,
+        default=None,
     )
     parser.add_argument(
         "--encoding",
@@ -75,12 +76,25 @@ def parse_args():
             Solver.CLASP,
         ],
         help="Which solver backend to use",
-        default=Solver.PICOSAT,
+        default=None,
     )
-    parser.add_argument("--seed", type=int, help="The random seed", default=1)
+    parser.add_argument("--seed", type=int, help="The random seed", default=None)
     parser.add_argument("--n", type=int, help="The size of the output grid (N x N)", default=20)
+    parser.add_argument(
+        "--output", 
+        type=str, 
+        help="The file to save the output image to. If not specified, it will be displayed in a new window.", 
+        default=None
+    )
 
     PRESETS = {
+        "default": {
+            "input": ExampleInput.ZELDA,
+            "var_ordering": VariableOrderingType.CONTEXT_SENSITIVE,
+            "cell_ordering": CellOrderingType.COL_MAJOR,
+            "encoding": WFCEncodingType.NEIGHBORHOOD,
+            "solver": Solver.PICOSAT,
+        },
         "zelda": {
             "input": ExampleInput.ZELDA,
             "var_ordering": VariableOrderingType.CONTEXT_SENSITIVE,
@@ -120,13 +134,16 @@ def parse_args():
 
     args = parser.parse_args()
 
-    if args.preset in PRESETS:
+    # Use the preset configuration if specified, but allow the user to override individual options
+    preset = args.preset or "default"
+    if preset in PRESETS:
         preset = PRESETS[args.preset]
         for key, value in preset.items():
-            setattr(args, key, value)
+            if not hasattr(args, key) or getattr(args, key) is None:
+                setattr(args, key, value)
     elif args.preset is not None:
         raise ValueError(f"Unknown preset {args.preset}")
-
+    
     input, display_solution = get_input(args.input)
 
     return Arguments(
@@ -138,5 +155,6 @@ def parse_args():
         wfc_encoding_type=args.encoding,
         solver=args.solver,
         random_seed=args.seed,
-        output_size=args.n
+        output_size=args.n,
+        output_file=args.output
     )
