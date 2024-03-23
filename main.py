@@ -51,7 +51,6 @@ if __name__ == "__main__":
         tile_var_ordering = compute_tile_var_ordering(
             N, C, var_ordering_type, cell_ordering_type, input_grid, seed
         )
-        print(var_ordering_type, cell_ordering_type, use_padding_constraint)
         formula = encode_wfc_formula(N, C, input_grid, tile_var_ordering)
         if use_padding_constraint:
             add_padding_nowrap_constraint(N, C, formula, tile_var_ordering)

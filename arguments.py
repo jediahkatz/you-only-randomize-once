@@ -65,7 +65,7 @@ def parse_args():
         type=lambda input: WFCEncodingType(str.upper(input)),
         choices=[WFCEncodingType.NEIGHBORHOOD, WFCEncodingType.TILE],
         help="Whether to define variables based on individual tiles or (plus-shaped) neighborhoods in the input",
-        default=WFCEncodingType.NEIGHBORHOOD,
+        default=None,
     )
     parser.add_argument(
         "--solver",
