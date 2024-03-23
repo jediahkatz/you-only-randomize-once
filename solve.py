@@ -1,6 +1,7 @@
 from enum import Enum
 from math import ceil
 from collections import defaultdict
+from tempfile import NamedTemporaryFile
 import pycosat
 import subprocess
 from ortools.sat.python import cp_model
@@ -25,7 +26,7 @@ def solve(formula, solver: Solver):
       return None
     return negate_literals_in_solution(soln)
   elif solver == Solver.ORTOOLS:
-    modified_formula = transform_formula_for_solver(formula, negate_literals=True, hack_jw_heuristic=False)
+    modified_formula = transform_formula_for_solver(formula, negate_literals=True, hack_jw_heuristic=True)
     soln = solve_formula_with_ortools(modified_formula)
     if soln is None:
       return None
@@ -80,13 +81,15 @@ def negate_literals_in_solution(solution):
   return [-v for v in solution]
 
 def solve_formula_with_clasp(formula, preprocess=False, default_sign='neg', heuristic='None'):
-  write_formula_to_dimacs_file('/tmp/wfc-formula.cnf', formula)
-  command = ['clasp', f'--heuristic={heuristic}', '--sat-prepro=no' if not preprocess else '', f'--sign-def={default_sign}', '/tmp/wfc-formula.cnf']
-  output_lines = subprocess.run(command, encoding='utf-8', stdout=subprocess.PIPE).stdout.split('\n')
-  if 'command not found' in output_lines[0]:
-    raise ValueError("Clasp is not installed. Please install it with `brew install clasp` (see https://potassco.org/clingo/ if you don't have `brew`) or use a different solver.")
-  solution = parse_clasp_output(output_lines)
-  return solution
+  with NamedTemporaryFile('w+') as temp_file:
+    print('temp_file.name', temp_file.name)
+    write_formula_to_dimacs_file(temp_file.name, formula)
+    command = ['clasp', f'--heuristic={heuristic}', '--sat-prepro=no' if not preprocess else '', f'--sign-def={default_sign}', temp_file.name]
+    output_lines = subprocess.run(command, encoding='utf-8', stdout=subprocess.PIPE).stdout.split('\n')
+    if 'command not found' in output_lines[0]:
+      raise ValueError("Clasp is not installed. Please install it with `brew install clasp` (see https://potassco.org/clingo/ if you don't have `brew`) or use a different solver.")
+    solution = parse_clasp_output(output_lines)
+    return solution
 
 def write_formula_to_dimacs_file(filename, formula):
   """
@@ -139,7 +142,7 @@ def solve_formula_with_ortools(formula, num_threads=4, preprocess=False, default
     print('Warning: default_sign={rnd} may not work properly. It also might cause the variable order to not be respected.')
 
   solver = cp_model.CpSolver()
-  # solver.parameters.num_workers = num_threads
+  solver.parameters.num_workers = num_threads
   solver.parameters.cp_model_presolve = preprocess
   # signs = {
   #     'neg': solver.parameters.POLARITY_FALSE,

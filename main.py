@@ -83,7 +83,8 @@ if __name__ == "__main__":
     solution = solve(formula, solver)
     if solution is not None:
         solution_grid = decode_solution_to_grid(N, C, solution, tile_var_ordering)
-        print(f"Solution found in {time() - t}s! Opening image in new window...")
+        output_action = "Opening image in new window" if output_file is None else f"Saving image to {output_file}"
+        print(f"Solution found in {time() - t}s! {output_action}...")
         visualize_grid_solution(
             C, solution_grid, grid_to_img_func=reconstruct_img_from_grid, output_file=output_file
         )
