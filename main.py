@@ -6,9 +6,11 @@ from var_ordering import (
 )
 from encode_wfc import (
     WFCEncodingType,
+    GlobalConstraintType,
     encode_wfc_formula,
     encode_wfc_neighborhoods_formula,
     add_reachability_global_constraint,
+    add_reachability_global_constraint_all_directions,
     add_padding_nowrap_constraint,
 )
 from solve import solve
@@ -33,10 +35,6 @@ if __name__ == "__main__":
     seed = args.random_seed
     output_file = args.output_file
 
-    # Whether to add a constraint that there must be a path from the top-left to the bottom-right
-    # that only moves right and down, using only tiles in `path_tiles_for_reachability_constraint`.
-    use_reachability_global_constraint = args.input_name == ExampleInput.ZELDA
-    path_tiles_for_reachability_constraint = [5]
     # Whether to add a constraint that the edges of the output must be a special padding tile.
     # This is a useful trick for generating tilemaps that don't wrap around. Only works when
     # the input has been padded with the C+1 tile (so just the mario example).
@@ -72,8 +70,16 @@ if __name__ == "__main__":
     else:
         raise ValueError("Unsupported WFC encoding type")
 
-    if use_reachability_global_constraint:
+    # Whether to add a constraint that there must be a path from the top-left to the bottom-right,
+    # using only tiles in `path_tiles_for_reachability_constraint`.
+    use_reachability_global_constraint = args.input_name == ExampleInput.ZELDA
+    path_tiles_for_reachability_constraint = [5]
+    if args.input_name == ExampleInput.ZELDA and args.global_constraint == GlobalConstraintType.PATH_RIGHT_DOWN:
         add_reachability_global_constraint(
+            N, formula, tile_var_ordering, path_tiles_for_reachability_constraint
+        )
+    elif args.input_name == ExampleInput.ZELDA and args.global_constraint == GlobalConstraintType.PATH_ALL_DIRECTIONS:
+        add_reachability_global_constraint_all_directions(
             N, formula, tile_var_ordering, path_tiles_for_reachability_constraint
         )
 

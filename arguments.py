@@ -2,7 +2,7 @@ from var_ordering import (
     VariableOrderingType,
     CellOrderingType
 )
-from encode_wfc import WFCEncodingType
+from encode_wfc import WFCEncodingType, GlobalConstraintType
 from solve import Solver
 from input_grids import ExampleInput, get_input
 import argparse
@@ -19,6 +19,7 @@ class Arguments:
     var_ordering_type: VariableOrderingType
     cell_ordering_type: CellOrderingType
     wfc_encoding_type: WFCEncodingType
+    global_constraint: GlobalConstraintType
     solver: Solver
     random_seed: Optional[int]
     output_size: int = 20
@@ -57,7 +58,7 @@ def parse_args():
             CellOrderingType.ROW_MAJOR,
             CellOrderingType.ROW_MAJOR_BOTTOM_UP,
         ],
-        help="The order the solver will attempt to assing the cells in. Different biases can be observed in the output with each ordering.",
+        help="The order the solver will attempt to assign the cells in. Different biases can be observed in the output with each ordering.",
         default=None,
     )
     parser.add_argument(
@@ -65,6 +66,13 @@ def parse_args():
         type=lambda input: WFCEncodingType(str.upper(input)),
         choices=[WFCEncodingType.NEIGHBORHOOD, WFCEncodingType.TILE],
         help="Whether to define variables based on individual tiles or (plus-shaped) neighborhoods in the input",
+        default=None,
+    )
+    parser.add_argument(
+        "--global_constraint",
+        type=lambda input: GlobalConstraintType(str.upper(input)),
+        choices=[GlobalConstraintType.PATH_RIGHT_DOWN, GlobalConstraintType.PATH_ALL_DIRECTIONS, GlobalConstraintType.NONE],
+        help="Which global constraint to the output. Only works with the Zelda input currently.",
         default=None,
     )
     parser.add_argument(
@@ -94,13 +102,31 @@ def parse_args():
             "cell_ordering": CellOrderingType.COL_MAJOR,
             "encoding": WFCEncodingType.NEIGHBORHOOD,
             "solver": Solver.PICOSAT,
+            "global_constraint": GlobalConstraintType.PATH_RIGHT_DOWN,
         },
-        "zelda": {
+        "zelda-tile-freq": {
             "input": ExampleInput.ZELDA,
             "var_ordering": VariableOrderingType.CONTEXT_SENSITIVE,
             "cell_ordering": CellOrderingType.COL_MAJOR,
             "encoding": WFCEncodingType.NEIGHBORHOOD,
             "solver": Solver.PICOSAT,
+            "global_constraint": GlobalConstraintType.PATH_RIGHT_DOWN,
+        },
+        "zelda-neighborhood-freq": {
+            "input": ExampleInput.ZELDA,
+            "var_ordering": VariableOrderingType.TILE_FREQUENCY,
+            "cell_ordering": CellOrderingType.COL_MAJOR,
+            "encoding": WFCEncodingType.TILE,
+            "solver": Solver.PICOSAT,
+            "global_constraint": GlobalConstraintType.PATH_RIGHT_DOWN,
+        },
+        "zelda-no-yoro": {
+            "input": ExampleInput.ZELDA,
+            "var_ordering": VariableOrderingType.TRIVIAL,
+            "cell_ordering": CellOrderingType.COL_MAJOR,
+            "encoding": WFCEncodingType.TILE,
+            "solver": Solver.PICOSAT,
+            "global_constraint": GlobalConstraintType.PATH_RIGHT_DOWN,
         },
         "mario": {
             "input": ExampleInput.MARIO,
@@ -153,6 +179,7 @@ def parse_args():
         var_ordering_type=args.var_ordering,
         cell_ordering_type=args.cell_ordering,
         wfc_encoding_type=args.encoding,
+        global_constraint=args.global_constraint,
         solver=args.solver,
         random_seed=args.seed,
         output_size=args.n,

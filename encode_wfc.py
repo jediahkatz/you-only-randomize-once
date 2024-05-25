@@ -7,6 +7,11 @@ class WFCEncodingType(Enum):
   TILE = "TILE"
   NEIGHBORHOOD = "NEIGHBORHOOD"
 
+class GlobalConstraintType(Enum):
+  NONE = "NONE"
+  PATH_RIGHT_DOWN = "PATH_RIGHT_DOWN"
+  PATH_ALL_DIRECTIONS = "PATH_ALL_DIRECTIONS"
+
 def encode_wfc_formula(N, C, input, var_ordering):
   """
   Outputs a SAT formula (as a list of lists of literals) representing
@@ -60,9 +65,6 @@ def encode_wfc_neighborhoods_formula(N, C, input, assign_tile, assign_neighborho
   be adjacent if they have an adjacency in the input.
 
   In this formulation, we have neighborhood variables as well as tile variables.
-  You can also call this function with `add_reachability_global_constraint=tiles`,
-  which enforces that there's a path from the top-left to the bottom-right using
-  tiles from the `tiles` array that only moves right or down.
   """
   formula = []
   input_neighborhoods = list(compute_neighborhood_frequencies_sparse(input).keys())
@@ -112,6 +114,11 @@ def encode_wfc_neighborhoods_formula(N, C, input, assign_tile, assign_neighborho
   return formula
 
 def add_reachability_global_constraint(N, formula, assign_tile, allowed_tiles):
+  """
+  Returns a list of clauses that represent a global constraint to
+  enforce that there's a path from the top-left to the bottom-right, using
+  tiles from the `allowed_tiles` array, that only moves right or down.
+  """
   ADD = formula.append
   num_vars_before_path_tile = max(abs(v) for clause in formula for v in clause)
 
@@ -133,8 +140,6 @@ def add_reachability_global_constraint(N, formula, assign_tile, allowed_tiles):
     for y in range(N):
       # is_path_tile(pos) => [assign_tile(pos, t_i) for t_i in allowed_tiles]
       ADD([-is_path_tile((x, y))] + [assign_tile((x, y), path_tile) for path_tile in allowed_tiles])
-      if (x, y) == (1, 4):
-        print([-is_path_tile((x, y))] + [assign_tile((x, y), path_tile) for path_tile in allowed_tiles])
 
       # assign_tile(pos, path_tile) => is_path_tile(pos)
       for path_tile in allowed_tiles:
@@ -148,14 +153,81 @@ def add_reachability_global_constraint(N, formula, assign_tile, allowed_tiles):
         ADD([-reachable((x, y)), reachable((x-1, y)), reachable((x, y-1))])
         # not reachable(x, y) => not is_path_tile(x, y) or not reachable((x-1, y))
         ADD([reachable((x, y)), -is_path_tile((x, y)), -reachable((x-1, y))])
-        # not reachable(x, y) => not is_path_tile(x, y) or not reachable((x-1, y))
+        # not reachable(x, y) => not is_path_tile(x, y) or not reachable((x, y-1))
         ADD([reachable((x, y)), -is_path_tile((x, y)), -reachable((x, y-1))])
       elif x >= 1 and y == 0:
+        # reachable(x, 0) => reachable(x-1, 0)
         ADD([-reachable((x, 0)), reachable((x-1, 0))])
+        # not reachable(x, 0) => not is_path_tile(x, 0) or not reachable((x-1, 0))
         ADD([-is_path_tile((x, 0)), -reachable((x-1, 0)), reachable((x, 0))])
       elif y >= 1 and x == 0:
         ADD([-reachable((0, y)), reachable((0, y-1))])
         ADD([-is_path_tile((0, y)), -reachable((0, y-1)), reachable((0, y))])
+
+def add_reachability_global_constraint_all_directions(N, formula, assign_tile, allowed_tiles):
+  """
+  Returns a list of clauses that represent a global constraint to
+  enforce that there's a path from the top-left to the bottom-right, using
+  tiles from the `allowed_tiles` array, that can move in any direction.
+  """
+  num_vars_before_path_tile = max(abs(v) for clause in formula for v in clause)
+
+  # whether pos has a tile in the set of `allowed_tiles`
+  def is_path_tile(pos):
+    x, y = pos
+    return x*N + y + 1 + num_vars_before_path_tile
+  
+  # represents a position being out of bounds -- always False
+  out_of_bounds_var = num_vars_before_path_tile + N*N + 1
+  
+  num_vars_before_reachability = out_of_bounds_var
+  # whether there's a length-i path from (0, 0) to pos using only the specified tiles
+  MAX_STEPS = N*N
+  def reachable(pos, i):
+    x, y = pos
+    if x < 0 or x >= N or y < 0 or y >= N:
+      # out of bounds, so not reachable
+      return out_of_bounds_var
+    return i*N*N + x*N + y + 1 + num_vars_before_reachability
+    
+  def ADD(clause):
+    always_false = out_of_bounds_var
+    always_true = -out_of_bounds_var
+    if always_true in clause:
+      # Clause is vacuously true
+      return
+    # Filter out false literals
+    formula.append([lit for lit in clause if lit != always_false])
+
+  ADD([reachable((0, 0), 0)])
+  ADD([reachable((N-1, N-1), i) for i in range(N, MAX_STEPS+1)])
+  for x in range(N):
+    for y in range(N):
+      for i in range(0, MAX_STEPS+1):
+        # is_path_tile(pos) => [assign_tile(pos, t_i) for t_i in allowed_tiles]
+        ADD([-is_path_tile((x, y))] + [assign_tile((x, y), path_tile) for path_tile in allowed_tiles])
+
+        # assign_tile(pos, path_tile) => is_path_tile(pos)
+        for path_tile in allowed_tiles:
+          ADD([-assign_tile((x, y), path_tile), is_path_tile((x, y))])
+
+        # reachable(x, y) <=> is_path_tile(x, y) and (reachable(x-1, y) or reachable(x, y-1) or reachable(x+1, y) or reachable(x, y+1))
+        ADD([-reachable((x, y), i), is_path_tile((x, y))])
+
+        if i >= 1:
+          ADD([-reachable((x, y), i), reachable((x-1, y), i-1), reachable((x, y-1), i-1), reachable((x+1, y), i-1), reachable((x, y+1), i-1)])
+
+          # not reachable(x, y) => not is_path_tile(x, y) or (not reachable((x-1, y)) and not reachable((x, y-1)) and not reachable((x+1, y)) and not reachable((x, y+1)))
+          # not reachable(x, y) => not is_path_tile(x, y) or not reachable((x-1, y))
+          ADD([reachable((x, y), i), -is_path_tile((x, y)), -reachable((x-1, y), i-1)])
+          # not reachable(x, y) => not is_path_tile(x, y) or not reachable((x, y-1))
+          ADD([reachable((x, y), i), -is_path_tile((x, y)), -reachable((x, y-1), i-1)])
+          # not reachable(x, y) => not is_path_tile(x, y) or not reachable((x+1, y))
+          ADD([reachable((x, y), i), -is_path_tile((x, y)), -reachable((x+1, y), i-1)])
+          # not reachable(x, y) => not is_path_tile(x, y) or not reachable((x, y+1))
+          ADD([reachable((x, y), i), -is_path_tile((x, y)), -reachable((x, y+1), i-1)])
+        elif (x, y) != (0, 0):
+          ADD([-reachable((x, y), i)])
 
 
 def add_padding_nowrap_constraint(N, C, formula, tile_var_ordering):
