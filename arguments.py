@@ -98,9 +98,9 @@ def parse_args():
     PRESETS = {
         "default": {
             "input": ExampleInput.ZELDA,
-            "var_ordering": VariableOrderingType.CONTEXT_SENSITIVE,
+            "var_ordering": VariableOrderingType.TILE_FREQUENCY,
             "cell_ordering": CellOrderingType.COL_MAJOR,
-            "encoding": WFCEncodingType.NEIGHBORHOOD,
+            "encoding": WFCEncodingType.TILE,
             "solver": Solver.PICOSAT,
             "global_constraint": GlobalConstraintType.PATH_RIGHT_DOWN,
         },
@@ -163,7 +163,7 @@ def parse_args():
     # Use the preset configuration if specified, but allow the user to override individual options
     preset = args.preset or "default"
     if preset in PRESETS:
-        preset = PRESETS[args.preset]
+        preset = PRESETS[preset]
         for key, value in preset.items():
             if not hasattr(args, key) or getattr(args, key) is None:
                 setattr(args, key, value)

@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Code for the paper 'You-Only-Randomize-Once: Shaping Statistical Properties in Constraint-Based PCG' by Katz, Bateni & Smith, published in the FDG 2024 conference."
 authors = ["Jediah Katz <jediahkatz@gmail.com>"]
 readme = "README.md"
+package-mode = false
 
 [tool.poetry.dependencies]
 python = ">=3.9,<3.13"
@@ -12,6 +13,7 @@ numpy = "^1.26.0"
 Pillow = "^10.0.1"
 requests = "^2.31.0"
 ortools = "^9.8.3296"
+matplotlib = "^3.9.0"
 
 
 [build-system]
