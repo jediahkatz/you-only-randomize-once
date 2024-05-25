@@ -9,7 +9,12 @@
 
 # You Only Randomize Once
 
-Code for the paper _You Only Randomize Once: Shaping Statistical Properties in Constraint-based PCG_. If you use this code, please cite the paper as follows:
+Code for the paper _You Only Randomize Once: Shaping Statistical Properties in Constraint-based PCG_. 
+
+Essentially, You Only Randomize Once (YORO) is a new technique that allows controlling the statistics of the outputs generated
+by a constraint solver. We apply it to generating [WaveFunctionCollapse](https://github.com/mxgmn/WaveFunctionCollapse)-style tilemaps using a constraint solver, making it possible to add global constraints like path reachability. (In theory, YORO could be used in constraint solving setting and is not limited to PCG.)
+
+If you use this code, please cite the paper as follows:
 
 ```
 @misc{katz2024yoro,
@@ -78,3 +83,5 @@ Here are some of the most notable options:
 
 
 The full list of configuration options can be found [here](https://github.com/jediahkatz/you-only-randomize-once/blob/2aa658e2a30f482aca7f5359d236feeafe971042/arguments.py#L115).
+
+### Over
