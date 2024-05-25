@@ -19,7 +19,7 @@ class Arguments:
     var_ordering_type: VariableOrderingType
     cell_ordering_type: CellOrderingType
     wfc_encoding_type: WFCEncodingType
-    global_constraint: GlobalConstraintType
+    path_constraint: GlobalConstraintType
     solver: Solver
     random_seed: Optional[int]
     output_size: int = 20
@@ -69,10 +69,10 @@ def parse_args():
         default=None,
     )
     parser.add_argument(
-        "--global_constraint",
+        "--path_constraint",
         type=lambda input: GlobalConstraintType(str.upper(input)),
         choices=[GlobalConstraintType.PATH_RIGHT_DOWN, GlobalConstraintType.PATH_ALL_DIRECTIONS, GlobalConstraintType.NONE],
-        help="Which global constraint to the output. Only works with the Zelda input currently.",
+        help="Which global path constraint to require in the output. Only works with the Zelda input currently.",
         default=None,
     )
     parser.add_argument(
@@ -102,7 +102,7 @@ def parse_args():
             "cell_ordering": CellOrderingType.COL_MAJOR,
             "encoding": WFCEncodingType.TILE,
             "solver": Solver.PICOSAT,
-            "global_constraint": GlobalConstraintType.PATH_RIGHT_DOWN,
+            "path_constraint": GlobalConstraintType.PATH_RIGHT_DOWN,
         },
         "zelda-tile-freq": {
             "input": ExampleInput.ZELDA,
@@ -110,7 +110,7 @@ def parse_args():
             "cell_ordering": CellOrderingType.COL_MAJOR,
             "encoding": WFCEncodingType.NEIGHBORHOOD,
             "solver": Solver.PICOSAT,
-            "global_constraint": GlobalConstraintType.PATH_RIGHT_DOWN,
+            "path_constraint": GlobalConstraintType.PATH_RIGHT_DOWN,
         },
         "zelda-neighborhood-freq": {
             "input": ExampleInput.ZELDA,
@@ -118,7 +118,7 @@ def parse_args():
             "cell_ordering": CellOrderingType.COL_MAJOR,
             "encoding": WFCEncodingType.TILE,
             "solver": Solver.PICOSAT,
-            "global_constraint": GlobalConstraintType.PATH_RIGHT_DOWN,
+            "path_constraint": GlobalConstraintType.PATH_RIGHT_DOWN,
         },
         "zelda-no-yoro": {
             "input": ExampleInput.ZELDA,
@@ -126,7 +126,7 @@ def parse_args():
             "cell_ordering": CellOrderingType.COL_MAJOR,
             "encoding": WFCEncodingType.TILE,
             "solver": Solver.PICOSAT,
-            "global_constraint": GlobalConstraintType.PATH_RIGHT_DOWN,
+            "path_constraint": GlobalConstraintType.PATH_RIGHT_DOWN,
         },
         "mario": {
             "input": ExampleInput.MARIO,
@@ -142,7 +142,7 @@ def parse_args():
             "encoding": WFCEncodingType.TILE,
             "solver": Solver.PICOSAT,
         },
-        "bw-tilefreq": {
+        "bw-tile-freq": {
             "input": ExampleInput.L,
             "var_ordering": VariableOrderingType.TILE_FREQUENCY,
             "cell_ordering": CellOrderingType.ROW_MAJOR,
@@ -179,7 +179,7 @@ def parse_args():
         var_ordering_type=args.var_ordering,
         cell_ordering_type=args.cell_ordering,
         wfc_encoding_type=args.encoding,
-        global_constraint=args.global_constraint,
+        path_constraint=args.path_constraint,
         solver=args.solver,
         random_seed=args.seed,
         output_size=args.n,

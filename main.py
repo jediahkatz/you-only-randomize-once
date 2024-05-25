@@ -74,11 +74,11 @@ if __name__ == "__main__":
     # using only tiles in `path_tiles_for_reachability_constraint`.
     use_reachability_global_constraint = args.input_name == ExampleInput.ZELDA
     path_tiles_for_reachability_constraint = [5]
-    if args.input_name == ExampleInput.ZELDA and args.global_constraint == GlobalConstraintType.PATH_RIGHT_DOWN:
+    if args.input_name == ExampleInput.ZELDA and args.path_constraint == GlobalConstraintType.PATH_RIGHT_DOWN:
         add_reachability_global_constraint(
             N, formula, tile_var_ordering, path_tiles_for_reachability_constraint
         )
-    elif args.input_name == ExampleInput.ZELDA and args.global_constraint == GlobalConstraintType.PATH_ALL_DIRECTIONS:
+    elif args.input_name == ExampleInput.ZELDA and args.path_constraint == GlobalConstraintType.PATH_ALL_DIRECTIONS:
         add_reachability_global_constraint_all_directions(
             N, formula, tile_var_ordering, path_tiles_for_reachability_constraint
         )
