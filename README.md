@@ -35,13 +35,13 @@ If you use this code, please cite the paper as follows:
 If you're using poetry, run `poetry shell` to enter into the virtual environment with the dependencies installed. Then, you can run the script with the following command:
 
 ```
-python3 main.py
+python3 src/main.py
 ```
 
 To write the generated output to a file instead of viewing it in a new window, you can run:
 
 ```
-python3 main.py --output out.png
+python3 src/main.py --output out.png
 ```
 
 ### CLI Parameters
@@ -49,7 +49,7 @@ python3 main.py --output out.png
 There are a number available presets to help you get started. You can use them as follows:
 
 ```
-python3 main.py --preset zelda-tile-freq
+python3 src/main.py --preset zelda-tile-freq
 ```
 
 | Preset                    | Description |
@@ -67,7 +67,7 @@ The full list of presets and the configurations they represent can be found [her
 
 For more granular control, you can override the presets with individual configuration settings. For example, suppose you want to generate 15x15 Zelda maps, with a global path that can move in any direction instead of just right and down, and using the OR-Tools solver instead of PicoSAT. Then you could do:
 ```
-python3 main.py --preset zelda --n 15 --global_constraint path_all_directions --solver ortools
+python3 src/main.py --preset zelda --n 15 --global_constraint path_all_directions --solver ortools
 ```
 
 Here are some of the most notable options:
@@ -84,4 +84,25 @@ Here are some of the most notable options:
 
 The full list of configuration options can be found [here](https://github.com/jediahkatz/you-only-randomize-once/blob/2aa658e2a30f482aca7f5359d236feeafe971042/arguments.py#L115).
 
-### Over
+## Code structure
+
+### `main.py`
+Entry point and high-level procedure of WaveFunctionCollapse with YORO.
+
+### `arguments.py`
+Uses `argparse` to parse the user's command line options. Specifies all presets and options.
+
+### `input_grids.py`
+Defines functions to load input grids from a URL or from a file. Also defines "black and white" inputs programmatically.
+
+### `encode_wfc.py`
+Implements all constraints for the encoding of WaveFunctionCollapse as a constraint problem. Includes tile-based and neighborhood-based encodings, and different types of global path constraints. We're using boolean SAT formulas as the modeling language, so all functions return lists of clauses.
+
+### `var_ordering.py`
+Contains the YORO logic that encodes random statistics into the ordering of solver variables. The methods in this file output a `TileVarOrdering` or `NeighborhoodVarOrdering`, which are functions from tile or neighborhood data to an integer position.
+
+### `solve.py`
+Wraps the different solver backends (PicoSAT, OR-Tools, and Clasp) and their configuration. Also contains helper functions that implement some required transformations to correct for solver behavior.
+
+### `output_solution.py`
+Contains functions for transforming the solver output into a grid of tiles, displaying a grid as an image, and writing out to a file.

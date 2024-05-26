@@ -102,7 +102,7 @@ def compute_tile_frequencies(input, C=None):
   return frequencies_arr
 
 
-def build_tile_freq_var_ordering(N, C, frequencies_arr, cell_order=CellOrderingType.RANDOM, seed=None):
+def build_tile_freq_var_ordering(N, C, frequencies_arr, cell_order=CellOrderingType.RANDOM, seed=None) -> TileVarOrdering:
   """
   Constructs an ordering over all boolean SAT variables `assign((x, y), tile)`
   representing "cell (x, y) is assigned [tile]". For each cell (x, y), randomly
@@ -151,7 +151,7 @@ def build_tile_freq_var_ordering(N, C, frequencies_arr, cell_order=CellOrderingT
   return ordering
 
 
-def trivial_var_ordering(N, C, cell_order=CellOrderingType.ROW_MAJOR):
+def trivial_var_ordering(N, C, cell_order=CellOrderingType.ROW_MAJOR) -> TileVarOrdering:
   """
   Constructs a simple ordering over all boolean SAT variables in a specified
   order of (x, y) and then ascending order of the tile.
@@ -178,7 +178,7 @@ def trivial_var_ordering(N, C, cell_order=CellOrderingType.ROW_MAJOR):
   return ordering
 
 
-def uniform_random_var_ordering(N, C, cell_order=CellOrderingType.RANDOM, seed=None):
+def uniform_random_var_ordering(N, C, cell_order=CellOrderingType.RANDOM, seed=None) -> TileVarOrdering:
   uniform_frequencies = [1] * C
   return build_tile_freq_var_ordering(
     N, C, uniform_frequencies, cell_order=cell_order, seed=seed
@@ -259,7 +259,7 @@ def sample_variable_ordering_scores(N, C, neighborhood_probabilities, tile_proba
 
   return score
 
-def build_neighborhood_freq_var_ordering(N, C, input_tiles, cell_order=CellOrderingType.RANDOM, was_input_padded=False, seed=None):
+def build_neighborhood_freq_var_ordering(N, C, input_tiles, cell_order=CellOrderingType.RANDOM, was_input_padded=False, seed=None) -> NeighborhoodVarOrdering:
   """
   Constructs an ordering over all boolean SAT variables of the form `assign((x, y), tile)`
   representing "cell (x, y) is assigned `tile`", or `neighbor((x, y), neighborhood)`
@@ -314,7 +314,7 @@ def build_neighborhood_freq_var_ordering(N, C, input_tiles, cell_order=CellOrder
 
   return (neighborhood, assign)
 
-def trivial_var_ordering_neighborhoods(N, C, input_tiles):
+def trivial_var_ordering_neighborhoods(N, C, input_tiles) -> NeighborhoodVarOrdering:
   neighborhoods = compute_neighborhood_frequencies_sparse(input_tiles).keys()
   n_vars = [
       ('n_var', (x, y), c, neighborhood)
@@ -342,7 +342,7 @@ def trivial_var_ordering_neighborhoods(N, C, input_tiles):
 
   return neighborhood, assign
 
-def uniform_random_var_ordering_neighborhoods(N, C, input_tiles, cell_order=CellOrderingType.RANDOM, seed=None):
+def uniform_random_var_ordering_neighborhoods(N, C, input_tiles, cell_order=CellOrderingType.RANDOM, seed=None) -> NeighborhoodVarOrdering:
   neighborhoods = compute_neighborhood_frequencies_sparse(input_tiles).keys()
   num_tiles = N**2
 
